@@ -42,7 +42,6 @@ class BungeeAPI {
   public async getQuote(params: GetQuoteRequestParams): Promise<any> {
     const queryString = this.buildQuery(params);
     const url = `${this.baseUrl}?${queryString}`;
-    console.log(params);
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -74,12 +73,17 @@ class BungeeAPI {
   public async checkAllowance(
     params: CheckAllowanceRequest
   ): Promise<CheckAllowanceResponse> {
+    const queryParams = new URLSearchParams({
+      chainID: params.chainID,
+      owner: params.owner,
+      allowanceTarget: params.allowanceTarget,
+      tokenAddress: params.tokenAddress,
+    });
     const response = await fetch(
-      'https://api.socket.tech/v2/approval/check-allowance',
+      `https://api.socket.tech/v2/approval/check-allowance?${queryParams.toString()}`,
       {
         headers: this.headers,
         method: 'GET',
-        body: JSON.stringify(params),
       }
     );
 
@@ -88,12 +92,18 @@ class BungeeAPI {
   public async buildApprovalTx(
     params: BuildApprovalTxRequest
   ): Promise<BuildApprovalTxResponse> {
+    const queryParams = new URLSearchParams({
+      chainID: params.chainID,
+      owner: params.owner,
+      allowanceTarget: params.allowanceTarget,
+      tokenAddress: params.tokenAddress,
+      amount: params.amount,
+    });
     const response = await fetch(
-      'https://api.socket.tech/v2/approval/build-tx',
+      `https://api.socket.tech/v2/approval/build-tx?${queryParams.toString()}`,
       {
         headers: this.headers,
         method: 'GET',
-        body: JSON.stringify(params),
       }
     );
 
@@ -103,11 +113,20 @@ class BungeeAPI {
   public async getBridgeStatus(
     params: GetBridgeStatusRequest
   ): Promise<GetBridgeStatusResponse> {
-    const response = await fetch('https://api.socket.tech/v2/bridge-status', {
-      headers: this.headers,
-      method: 'GET',
-      body: JSON.stringify(params),
+    const queryParams = new URLSearchParams({
+      transactionHash: params.transactionHash,
+      fromChainId: params.fromChainId,
+      toChainId: params.toChainId || '',
+      bridgeName: params.bridgeName || '',
+      isBridgeProtectionTx: params.isBridgeProtectionTx ? 'true' : 'false',
     });
+    const response = await fetch(
+      `https://api.socket.tech/v2/bridge-status?${queryParams.toString()}`,
+      {
+        headers: this.headers,
+        method: 'GET',
+      }
+    );
 
     return response.json() as Promise<GetBridgeStatusResponse>;
   }

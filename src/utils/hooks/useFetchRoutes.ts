@@ -6,6 +6,7 @@ import { getQuote } from '../swapUtils';
 export const useFetchRoutes = () => {
   const [routes, setRoutes] = useState([]);
   const [isRoutesLoading, setIsRoutesLoading] = useState(false);
+  const [routesError, setRoutesError] = useState('');
   const { address, chainId } = useAccount();
 
   const fetchRoutes = useCallback(
@@ -23,6 +24,7 @@ export const useFetchRoutes = () => {
       }
       setRoutes([]);
       setIsRoutesLoading(true);
+      setRoutesError('');
       try {
         const quote = await getQuote({
           fromChainId: chainId,
@@ -40,6 +42,7 @@ export const useFetchRoutes = () => {
         setRoutes(routes);
       } catch (error) {
         console.error(error);
+        setRoutesError('Error fetching routes'); // just set to a string for now
       } finally {
         setIsRoutesLoading(false);
       }
@@ -47,5 +50,5 @@ export const useFetchRoutes = () => {
     [address, chainId]
   );
 
-  return { routes, isRoutesLoading, fetchRoutes };
+  return { routes, isRoutesLoading, fetchRoutes, routesError };
 };

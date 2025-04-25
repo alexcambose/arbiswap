@@ -21,6 +21,7 @@ const SwapFormContent = () => {
     isRoutesLoading,
     fromTokenAddress,
     toTokenAddress,
+    routesError,
   } = useSwapContext();
 
   const debouncedFetchRoutes = useCallback(debounce(fetchRoutes, 1000), [
@@ -47,6 +48,11 @@ const SwapFormContent = () => {
       <FromField />
       <ToField />
       <SwapButton isLoading={isRoutesLoading} disabled={routes.length === 0} />
+      {routesError && (
+        <div role="alert" className="alert alert-error">
+          {routesError}
+        </div>
+      )}
     </>
   );
 };

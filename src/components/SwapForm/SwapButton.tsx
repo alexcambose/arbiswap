@@ -22,7 +22,7 @@ export const SwapButton = ({
         disabled={isLoading || disabled}
         onClick={submitForm}
       >
-        Swap
+        {isLoading ? <span className="loading loading-spinner"></span> : 'Swap'}
       </button>
     </div>
   );

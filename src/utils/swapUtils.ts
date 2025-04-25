@@ -52,7 +52,7 @@ export async function getApprovalTransactionData(params: {
     amount: params.amount,
   });
   const response = await fetch(
-    `/api/approval/build-tx?${queryParams.toString()}`
+    `/api/approval-transaction-data?${queryParams.toString()}`
   );
 
   const json = await response.json();
@@ -72,7 +72,7 @@ export async function checkAllowance(params: {
     tokenAddress: params.tokenAddress,
   });
   const response = await fetch(
-    `/api/approval/check-allowance?${queryParams.toString()}`
+    `/api/check-allowance?${queryParams.toString()}`
   );
 
   const json = await response.json();

@@ -5,7 +5,12 @@ import {
   getApprovalTransactionData,
   getBridgeStatus,
 } from '@/utils/swapUtils';
-import { getGasPrice, sendTransaction, estimateGas } from '@wagmi/core';
+import {
+  getGasPrice,
+  sendTransaction,
+  estimateGas,
+  waitForTransactionReceipt,
+} from '@wagmi/core';
 import React, {
   createContext,
   useCallback,
@@ -17,7 +22,7 @@ import { useAccount } from 'wagmi';
 import { useFetchRoutes } from '@/utils/hooks/useFetchRoutes';
 
 const FROM_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-const TO_TOKEN_ADDRESS = '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8';
+const TO_TOKEN_ADDRESS = '0xaf88d065e77c8cc2239327c5edb3a432268e5831';
 
 type SwapContextProps = {
   children: React.ReactNode;
@@ -29,6 +34,7 @@ type Context = {
   routes: Route[];
   isRoutesLoading: boolean;
   fetchRoutes: () => Promise<void>;
+  routesError: boolean;
 };
 
 // Just find-replace "XContext" with whatever context name you like. (ie. DankContext)
@@ -41,7 +47,8 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
   const [toTokenAddress] = useState<string>(TO_TOKEN_ADDRESS);
 
   const { address, chainId } = useAccount();
-  const { routes, isRoutesLoading, fetchRoutes } = useFetchRoutes();
+  const { routes, isRoutesLoading, fetchRoutes, routesError } =
+    useFetchRoutes();
   useEffect(() => {
     if (routes.length > 0) {
       setSelectedRoute(routes[0]);
@@ -69,9 +76,9 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       body: JSON.stringify({ route: selectedRoute }),
     });
     const buildTxResponse = await buildTxRawResponse.json();
-
     // Used to check for ERC-20 approvals
     const approvalData = buildTxResponse.result.approvalData;
+    console.log({ approvalData });
     // approvalData from apiReturnData is null for native tokens
     // Values are returned for ERC20 tokens but token allowance needs to be checked
     if (approvalData !== null) {
@@ -131,18 +138,18 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       gasPrice: gasPrice,
     });
 
-    const tx = await sendTransaction(wagmiConfig, {
+    const txHash = await sendTransaction(wagmiConfig, {
       to: buildTxResponse.result.txTarget,
       data: buildTxResponse.result.txData,
       value: buildTxResponse.result.value,
       gasPrice: gasPrice,
       gasLimit: gasEstimate,
     });
-
+    console.log({ txHash });
     // Initiates swap/bridge transaction on user's frontend which user has to sign
-    const receipt = await tx.wait();
-
-    const txHash = receipt.transactionHash;
+    const receipt = await waitForTransactionReceipt(wagmiConfig, {
+      hash: txHash,
+    });
 
     console.log('Bridging Transaction : ', receipt.transactionHash);
 
@@ -171,6 +178,7 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
         fetchRoutes,
         fromTokenAddress,
         toTokenAddress,
+        routesError,
       }}
     >
       {children}
