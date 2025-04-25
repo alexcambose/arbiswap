@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import WalletIndicator from './WalletIndicator';
+import WalletIndicator from './ConnectButton';
 
 const Header = () => {
   return (
