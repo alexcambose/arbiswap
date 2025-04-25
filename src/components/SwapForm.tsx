@@ -59,7 +59,7 @@ const SwapForm = () => {
 
   return (
     <Formik
-      initialValues={{ fromAmount: null }}
+      initialValues={{ fromAmount: undefined }}
       validationSchema={toFormikValidationSchema(SwapFormSchema)}
       onSubmit={handleSubmit}
     >
