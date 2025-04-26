@@ -1,3 +1,5 @@
+import { Route } from '@/types/ApiTypes';
+
 export async function getQuote(params: {
   fromChainId: number;
   fromTokenAddress: string;
@@ -23,6 +25,22 @@ export async function getQuote(params: {
   return json;
 }
 
+export const buildTx = async (route: Route) => {
+  // Fetching transaction data for swap/bridge tx
+  const buildTxRawResponse = await fetch(`/api/build-tx`, {
+    method: 'POST',
+    body: JSON.stringify({ route }),
+  });
+  return buildTxRawResponse.json();
+};
+
+/**
+ * Fetches the status of a bridge transaction
+ * @param transactionHash - The hash of the transaction to check
+ * @param fromChainId - The ID of the chain the transaction was sent from
+ * @param toChainId - The ID of the chain the transaction was sent to
+ * @returns The status of the transaction
+ */
 export async function getBridgeStatus(
   transactionHash: string,
   fromChainId: number,
@@ -78,3 +96,28 @@ export async function checkAllowance(params: {
   const json = await response.json();
   return json;
 }
+
+export const bridgeStatusResolver = ({
+  txHash,
+  fromChainId,
+  toChainId,
+}: {
+  txHash: string;
+  fromChainId: number;
+  toChainId: number;
+}) => {
+  return new Promise((resolve, reject) => {
+    const txStatus = setInterval(async () => {
+      const status = await getBridgeStatus(txHash, fromChainId, toChainId);
+      console.log(
+        `SOURCE TX : ${status.result.sourceTxStatus}\nDEST TX : ${status.result.destinationTxStatus}`
+      );
+
+      if (status.result.destinationTxStatus == 'COMPLETED') {
+        console.log('DEST TX HASH :', status.result.destinationTransactionHash);
+        clearInterval(txStatus);
+        resolve(status.result.destinationTransactionHash);
+      }
+    }, 20000);
+  });
+};

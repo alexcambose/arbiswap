@@ -10,18 +10,16 @@ const ToFieldLabel = () => {
   );
 };
 
-export const ToField = () => {
-  return (
-    <div className="fieldset">
-      <ToFieldLabel />
-      <Field
-        id="toAmount"
-        name="toAmount"
-        className="input"
-        placeholder="Type here"
-        type="number"
-        min="1"
-      />
-    </div>
-  );
-};
+export const ToField = () => (
+  <div className="fieldset">
+    <ToFieldLabel />
+    <Field
+      id="toAmount"
+      name="toAmount"
+      className="input"
+      placeholder="Type here"
+      type="number"
+      min="1"
+    />
+  </div>
+);

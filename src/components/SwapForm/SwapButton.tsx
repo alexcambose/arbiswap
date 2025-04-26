@@ -22,15 +22,23 @@ export const SwapButton = () => {
   if (!address) {
     return <ConnectButton />;
   }
+  const isLoading = isSwapping || isRoutesLoading;
+  const isDisabled = isSwapping || isRoutesLoading || routes.length === 0;
+  const label = (() => {
+    if (isRoutesLoading) {
+      return 'Fetching Routes';
+    }
+    return labels[currentStatus];
+  })();
   return (
     <div className="card-actions justify-end">
       <button
         className="btn btn-primary w-full"
-        disabled={isSwapping || isRoutesLoading || routes.length === 0}
+        disabled={isDisabled}
         onClick={submitForm}
       >
-        {isSwapping && <span className="loading loading-spinner"></span>}
-        {labels[currentStatus]}
+        {isLoading && <span className="loading loading-spinner"></span>}
+        {label}
       </button>
     </div>
   );

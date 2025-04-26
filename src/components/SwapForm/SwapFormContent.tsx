@@ -1,15 +1,15 @@
+import { assets } from '@/config/assets';
 import { useSwapContext } from '@/context/SwapContext';
 import { SwapFormSchema } from '@/utils/server/api/schemas';
 import { useFormikContext } from 'formik';
 import debounce from 'lodash/debounce';
 import { useCallback, useEffect } from 'react';
+import { formatUnits, parseUnits } from 'viem';
 import { z } from 'zod';
 import { FromField } from './FromField';
 import RoutesList from './RoutesList';
 import { SwapButton } from './SwapButton';
 import { ToField } from './ToField';
-import { assets } from '@/config/assets';
-import { formatUnits, parseUnits } from 'viem';
 
 export const SwapFormContent = () => {
   const { values, isValid, setFieldValue } =
@@ -63,7 +63,7 @@ export const SwapFormContent = () => {
       BigInt(selectedRoute?.toAmount),
       toAsset.decimals
     );
-    setFieldValue('toAmount', toAmount);
+    setFieldValue('toAmount', parseFloat(toAmount));
   }, [selectedRoute, setFieldValue, toChainId, toTokenAddress]);
 
   return (

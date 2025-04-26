@@ -1,16 +1,21 @@
-import { Route } from '@/types/ApiTypes';
+import { assets } from '@/config/assets';
 import { wagmiConfig } from '@/config/walletConfig';
+import { Route } from '@/types/ApiTypes';
+import { useFetchRoutes } from '@/utils/hooks/useFetchRoutes';
+import { useHasBatchingCapability } from '@/utils/hooks/useHasBatchingCapability';
 import {
+  buildTx,
   checkAllowance,
   getApprovalTransactionData,
-  getBridgeStatus,
 } from '@/utils/swapUtils';
 import {
   getGasPrice,
   sendTransaction,
-  estimateGas,
   waitForTransactionReceipt,
 } from '@wagmi/core';
+import { sendCalls } from '@wagmi/core/experimental';
+import { toSafeSmartAccount } from 'permissionless';
+
 import React, {
   createContext,
   useCallback,
@@ -18,10 +23,8 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { useAccount } from 'wagmi';
-import { useFetchRoutes } from '@/utils/hooks/useFetchRoutes';
-import { assets } from '@/config/assets';
 import { arbitrum } from 'viem/chains';
+import { useAccount } from 'wagmi';
 
 // hardcoding for now
 
@@ -49,6 +52,7 @@ type Context = {
   setSelectedRoute: (route: Route) => void;
   fromChainId: number;
   toChainId: number;
+  reset: () => void;
 };
 export type BridgeStatus =
   | 'READY'
@@ -71,10 +75,18 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
   // hardcoded chain ids
   const [fromChainId] = useState<number>(arbitrum.id);
   const [toChainId] = useState<number>(arbitrum.id);
+  const hasBatchingCapability = useHasBatchingCapability();
 
-  const { address, connector, chainId } = useAccount();
+  const { address, connector } = useAccount();
   const { routes, isRoutesLoading, fetchRoutes, routesError } =
     useFetchRoutes();
+
+  const reset = useCallback(() => {
+    setCurrentStatus('READY');
+    setIsSwapping(false);
+    setSelectedRoute(null);
+  }, []);
+
   useEffect(() => {
     if (routes.length > 0) {
       setSelectedRoute(routes[0]);
@@ -82,121 +94,125 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       setSelectedRoute(null);
     }
   }, [routes]);
+
   console.log({ connector });
+
   const executeSwap = useCallback(async () => {
+    console.log('Executing swap', selectedRoute);
     if (!address) {
       throw new Error('No account found');
     }
     if (!selectedRoute) {
       throw new Error('No route selected');
     }
-    console.log('Executing swap', selectedRoute);
+
+    console.log('Executing swap', selectedRoute, hasBatchingCapability);
     const tokenAddress = fromTokenAddress;
     const fromAmount = selectedRoute.fromAmount;
 
     setIsSwapping(true);
     setCurrentStatus('BUILDING_TX');
-    // Fetching transaction data for swap/bridge tx
-    const buildTxRawResponse = await fetch(`/api/build-tx`, {
-      method: 'POST',
-      body: JSON.stringify({ route: selectedRoute }),
-    });
-    const buildTxResponse = await buildTxRawResponse.json();
-    // Used to check for ERC-20 approvals
-    const approvalData = buildTxResponse.result.approvalData;
-    // approvalData from apiReturnData is null for native tokens
-    // Values are returned for ERC20 tokens but token allowance needs to be checked
-    if (approvalData !== null) {
-      const { allowanceTarget, minimumApprovalAmount } = approvalData;
-      // Fetches token allowance given to Bungee contracts
-      const allowanceCheckStatus = await checkAllowance({
-        chainId: fromChainId,
-        owner: address,
-        allowanceTarget,
-        tokenAddress,
-      });
-
-      const allowanceValue = allowanceCheckStatus.result?.value;
-
-      // If Bungee contracts don't have sufficient allowance
-      if (minimumApprovalAmount > allowanceValue) {
-        // Approval tx data fetched
-        const approvalTransactionData = await getApprovalTransactionData({
+    try {
+      // Fetching transaction data for swap/bridge tx
+      const buildTxResponse = await buildTx(selectedRoute);
+      // Used to check for ERC-20 approvals
+      const approvalData = buildTxResponse.result.approvalData;
+      // approvalData from apiReturnData is null for native tokens
+      // Values are returned for ERC20 tokens but token allowance needs to be checked
+      const gasPrice = await getGasPrice(wagmiConfig);
+      let approveTxData = {};
+      if (approvalData !== null) {
+        const { allowanceTarget, minimumApprovalAmount } = approvalData;
+        // Fetches token allowance given to Bungee contracts
+        const allowanceCheckStatus = await checkAllowance({
           chainId: fromChainId,
           owner: address,
           allowanceTarget,
           tokenAddress,
-          amount: fromAmount,
         });
 
-        const gasPrice = await getGasPrice(wagmiConfig);
+        const allowanceValue = allowanceCheckStatus.result?.value;
 
-        const gasEstimate = await estimateGas(wagmiConfig, {
-          to: approvalTransactionData.result?.to,
-          value: BigInt(0),
-          data: approvalTransactionData.result?.data,
-          gasPrice: gasPrice,
+        // If Bungee contracts don't have sufficient allowance
+        if (minimumApprovalAmount > allowanceValue) {
+          // Approval tx data fetched
+          const approvalTransactionData = await getApprovalTransactionData({
+            chainId: fromChainId,
+            owner: address,
+            allowanceTarget,
+            tokenAddress,
+            amount: fromAmount,
+          });
+
+          approveTxData = {
+            to: approvalTransactionData.result?.to,
+            value: BigInt(0),
+            data: approvalTransactionData.result?.data,
+            gasPrice,
+          };
+        }
+      }
+
+      const bridgeTxData = {
+        to: buildTxResponse.result.txTarget,
+        value: buildTxResponse.result.value,
+        data: buildTxResponse.result.txData,
+        gasPrice,
+      };
+
+      if (hasBatchingCapability) {
+        const txHash = await sendCalls(wagmiConfig, {
+          calls: [approveTxData, bridgeTxData],
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error
+          chainId: fromChainId,
         });
+        console.log({ txHash });
+        // await waitForTransactionReceipt(wagmiConfig, {
+        //   hash: txHash,
+        // });
+        setCurrentStatus('BRIDGE_COMPLETE');
+      } else {
         setCurrentStatus('APPROVE_START');
 
-        const txHash = await sendTransaction(wagmiConfig, {
-          to: approvalTransactionData.result?.to,
-          value: BigInt(0),
-          data: approvalTransactionData.result?.data,
-          gasPrice: gasPrice,
-          gasLimit: gasEstimate,
-        });
+        const txHashApprove = await sendTransaction(wagmiConfig, approveTxData);
         setCurrentStatus('APPROVE_PENDING');
         // Initiates approval transaction on user's frontend which user has to sign
-        const receipt = await waitForTransactionReceipt(wagmiConfig, {
-          hash: txHash,
+        await waitForTransactionReceipt(wagmiConfig, {
+          hash: txHashApprove,
         });
         setCurrentStatus('APPROVE_COMPLETE');
-        console.log('Approval Transaction Hash :', receipt.transactionHash);
-      }
-    }
+        setCurrentStatus('BRIDGE_START');
 
-    const gasPrice = await getGasPrice(wagmiConfig);
-
-    const gasEstimate = await estimateGas(wagmiConfig, {
-      to: buildTxResponse.result.txTarget,
-      value: buildTxResponse.result.value,
-      data: buildTxResponse.result.txData,
-      gasPrice: gasPrice,
-    });
-    setCurrentStatus('BRIDGE_START');
-
-    const txHash = await sendTransaction(wagmiConfig, {
-      to: buildTxResponse.result.txTarget,
-      data: buildTxResponse.result.txData,
-      value: buildTxResponse.result.value,
-      gasPrice: gasPrice,
-      gasLimit: gasEstimate,
-    });
-    setCurrentStatus('BRIDGE_PENDING');
-    console.log({ txHash });
-    // Initiates swap/bridge transaction on user's frontend which user has to sign
-    const receipt = await waitForTransactionReceipt(wagmiConfig, {
-      hash: txHash,
-    });
-    setCurrentStatus('BRIDGE_COMPLETE');
-    console.log('Bridging Transaction : ', receipt.transactionHash);
-
-    // Checks status of transaction every 20 secs
-    const txStatus = setInterval(async () => {
-      const status = await getBridgeStatus(txHash, fromChainId, toChainId);
-
-      console.log(
-        `SOURCE TX : ${status.result.sourceTxStatus}\nDEST TX : ${status.result.destinationTxStatus}`
-      );
-
-      if (status.result.destinationTxStatus == 'COMPLETED') {
-        console.log('DEST TX HASH :', status.result.destinationTransactionHash);
+        const txHashBridge = await sendTransaction(wagmiConfig, bridgeTxData);
+        setCurrentStatus('BRIDGE_PENDING');
+        // Initiates swap/bridge transaction on user's frontend which user has to sign
+        await waitForTransactionReceipt(wagmiConfig, {
+          hash: txHashBridge,
+        });
         setCurrentStatus('BRIDGE_COMPLETE');
-        clearInterval(txStatus);
       }
-    }, 20000);
-  }, [address, chainId, fromTokenAddress, selectedRoute]);
+
+      // await bridgeStatusResolver({
+      //   txHash,
+      //   fromChainId,
+      //   toChainId,
+      // });
+      setCurrentStatus('BRIDGE_COMPLETE');
+    } catch (e) {
+      console.error(e);
+      throw e;
+    } finally {
+      setCurrentStatus('READY');
+      setIsSwapping(false);
+    }
+  }, [
+    address,
+    fromChainId,
+    fromTokenAddress,
+    selectedRoute,
+    hasBatchingCapability,
+  ]);
 
   return (
     <SwapContext.Provider
@@ -214,6 +230,7 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
         setSelectedRoute,
         fromChainId,
         toChainId,
+        reset,
       }}
     >
       {children}

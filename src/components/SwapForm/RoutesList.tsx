@@ -25,9 +25,11 @@ const RouteCard = ({
   const toAssetConfig = assets[toChainId].find(
     (asset) => asset.address === toTokenAddress
   );
+
   if (!fromAssetConfig || !toAssetConfig) {
     return null;
   }
+
   return (
     <div
       className={`card bg-base-100 w-full shadow-sm cursor-pointer border transition-all duration-150 ${
@@ -124,11 +126,7 @@ const RouteCard = ({
 const RoutesList = () => {
   const { routes, selectedRoute, setSelectedRoute } = useSwapContext();
   if (routes.length === 0) {
-    return (
-      <div className="flex flex-col gap-3 mt-2">
-        <div className="text-center text-base-content/60">No routes found</div>
-      </div>
-    );
+    return null;
   }
   return (
     <div className="mt-3">
