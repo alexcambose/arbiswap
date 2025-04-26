@@ -1,13 +1,11 @@
-import { useSwapContext } from '@/context/SwapContext';
-import { useErc20TokenBalance } from '@/utils/hooks/useErc20TokenBalance';
+import { useNativeTokenBalance } from '@/utils/hooks/useNativeTokenBalance';
 import { Field } from 'formik';
 
 const ToFieldLabel = () => {
-  const { toTokenAddress } = useSwapContext();
-  const { balance, isLoading, error } = useErc20TokenBalance(toTokenAddress);
+  const { balance, symbol, isLoading, error } = useNativeTokenBalance();
   return (
     <label className="fieldset-legend" htmlFor="toAmount">
-      To (USDC) {balance}
+      To ({symbol || 'USDC'}) {balance + ' ' + symbol}
     </label>
   );
 };

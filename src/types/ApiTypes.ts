@@ -43,7 +43,7 @@ export interface Route {
   toAmount: string;
   chainGasBalances: Record<string, string>;
   minimumGasBalances: Record<string, string>;
-  usedBridgeNames: string[];
+  usedDexName: string; // usedBridgeNames: string[]; this seems to not be present in the response
   totalUserTx: number;
   totalGasFeesInUsd: number;
   recipient: string;

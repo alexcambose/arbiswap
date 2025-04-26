@@ -1,10 +1,25 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { http } from 'wagmi';
+import { connectorsForWallets, getDefaultConfig } from '@rainbow-me/rainbowkit';
+import {
+  safeWallet,
+  walletConnectWallet,
+} from '@rainbow-me/rainbowkit/wallets';
+import { rainbowWallet } from '@rainbow-me/rainbowkit/wallets';
+import { createConfig, http } from 'wagmi';
 import { arbitrum } from 'wagmi/chains';
-
-export const wagmiConfig = getDefaultConfig({
-  appName: 'Arbiswap',
-  projectId: 'YOUR_PROJECT_ID',
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Recommended',
+      wallets: [rainbowWallet, walletConnectWallet, safeWallet],
+    },
+  ],
+  {
+    appName: 'Arbiswap',
+    projectId: 'YOUR_PROJECT_ID',
+  }
+);
+export const wagmiConfig = createConfig({
+  connectors,
   chains: [arbitrum],
   transports: {
     [arbitrum.id]: http(),

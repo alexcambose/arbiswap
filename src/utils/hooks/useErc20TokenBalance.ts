@@ -7,7 +7,6 @@ export function useErc20TokenBalance(tokenAddress: Address) {
   const { address } = useAccount();
 
   const enabled = !!address && !!tokenAddress;
-
   const { data, isLoading, error } = useReadContracts({
     allowFailure: false,
     query: {
@@ -22,7 +21,6 @@ export function useErc20TokenBalance(tokenAddress: Address) {
       },
     ],
   });
-
   if (!enabled || !data) {
     return {
       balance: undefined,
@@ -31,9 +29,8 @@ export function useErc20TokenBalance(tokenAddress: Address) {
     };
   }
   const [rawBalance] = data;
-  const balance = rawBalance
-    ? formatUnits(rawBalance as bigint, ERC20_DECIMALS)
-    : undefined;
+  const balance =
+    rawBalance > 0 ? formatUnits(rawBalance as bigint, ERC20_DECIMALS) : 0;
 
   return {
     balance,
