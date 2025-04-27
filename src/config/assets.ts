@@ -1,8 +1,9 @@
+import { Address } from 'viem';
 import { arbitrum } from 'viem/chains';
 
 export const assets: {
   [chainId: string]: {
-    address: string;
+    address: Address;
     name: string;
     symbol: string;
     decimals: number;

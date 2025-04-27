@@ -2,12 +2,15 @@
 import { SwapContextProvider, useSwapContext } from '@/context/SwapContext';
 import { SwapFormSchema } from '@/utils/server/api/schemas';
 import { Formik, FormikHelpers } from 'formik';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 import AdditionalInfo from './SwapForm/AdditionalInfo';
 import { SwapFormContent } from './SwapForm/SwapFormContent';
 import { z } from 'zod';
+
 const SwapForm = () => {
+  const [successTxHash, setSuccessTxHash] = useState<string>('');
+
   const { executeSwap, reset } = useSwapContext();
 
   const handleSubmit = useCallback(
@@ -15,10 +18,12 @@ const SwapForm = () => {
       _: z.infer<typeof SwapFormSchema>,
       { resetForm }: FormikHelpers<z.infer<typeof SwapFormSchema>>
     ) => {
+      setSuccessTxHash('');
       try {
-        await executeSwap();
+        const txHash = await executeSwap();
         reset();
         resetForm();
+        setSuccessTxHash(txHash);
       } catch (error) {
         console.error(error);
       }
@@ -28,12 +33,12 @@ const SwapForm = () => {
 
   return (
     <Formik
-      initialValues={{ fromAmount: '', toAmount: '' }}
+      initialValues={{ fromAmount: 0, toAmount: 0 }}
       validationSchema={toFormikValidationSchema(SwapFormSchema)}
       isInitialValid={false}
       onSubmit={handleSubmit}
     >
-      <SwapFormContent />
+      <SwapFormContent successTxHash={successTxHash} />
     </Formik>
   );
 };

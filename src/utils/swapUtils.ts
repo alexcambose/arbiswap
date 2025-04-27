@@ -106,7 +106,7 @@ export const bridgeStatusResolver = ({
   fromChainId: number;
   toChainId: number;
 }) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const txStatus = setInterval(async () => {
       const status = await getBridgeStatus(txHash, fromChainId, toChainId);
       console.log(

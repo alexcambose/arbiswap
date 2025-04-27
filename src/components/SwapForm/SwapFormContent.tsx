@@ -10,8 +10,13 @@ import { FromField } from './FromField';
 import RoutesList from './RoutesList';
 import { SwapButton } from './SwapButton';
 import { ToField } from './ToField';
+import Link from 'next/link';
 
-export const SwapFormContent = () => {
+export const SwapFormContent = ({
+  successTxHash,
+}: {
+  successTxHash: string;
+}) => {
   const { values, isValid, setFieldValue } =
     useFormikContext<z.infer<typeof SwapFormSchema>>();
 
@@ -30,7 +35,6 @@ export const SwapFormContent = () => {
   ]);
 
   useEffect(() => {
-    if (!isValid) return;
     const fromAsset = assets[fromChainId].find(
       (asset) => asset.address === fromTokenAddress
     );
@@ -38,11 +42,14 @@ export const SwapFormContent = () => {
     const fromAmount = parseUnits(
       values.fromAmount.toString(),
       fromAsset.decimals
-    );
+    ).toString();
+
+    if (fromAmount === '0') return;
+
     debouncedFetchRoutes({
       fromTokenAddress,
       toTokenAddress,
-      fromAmount: fromAmount.toString(),
+      fromAmount,
     });
   }, [
     isValid,
@@ -68,6 +75,18 @@ export const SwapFormContent = () => {
 
   return (
     <>
+      {successTxHash && (
+        <div role="alert" className="alert alert-success">
+          Swap successful.{' '}
+          <Link
+            href={`https://arbiscan.io/tx/${successTxHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on Arbiscan
+          </Link>
+        </div>
+      )}
       <FromField />
       <ToField />
       <SwapButton />

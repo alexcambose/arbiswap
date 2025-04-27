@@ -30,6 +30,7 @@ export const SwapButton = () => {
     }
     return labels[currentStatus];
   })();
+
   return (
     <div className="card-actions justify-end">
       <button

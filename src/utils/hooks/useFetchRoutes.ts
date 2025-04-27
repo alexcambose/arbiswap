@@ -50,5 +50,11 @@ export const useFetchRoutes = () => {
     [address, chainId]
   );
 
-  return { routes, isRoutesLoading, fetchRoutes, routesError };
+  const resetRoutes = useCallback(() => {
+    setRoutes([]);
+    setIsRoutesLoading(false);
+    setRoutesError('');
+  }, []);
+
+  return { routes, isRoutesLoading, fetchRoutes, routesError, resetRoutes };
 };

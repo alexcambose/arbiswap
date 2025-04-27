@@ -3,6 +3,7 @@ import { wagmiConfig } from '@/config/walletConfig';
 import { Route } from '@/types/ApiTypes';
 import { useFetchRoutes } from '@/utils/hooks/useFetchRoutes';
 import { useHasBatchingCapability } from '@/utils/hooks/useHasBatchingCapability';
+import { waitForSafeTx } from '@/utils/safe';
 import {
   buildTx,
   checkAllowance,
@@ -13,8 +14,6 @@ import {
   sendTransaction,
   waitForTransactionReceipt,
 } from '@wagmi/core';
-import { sendCalls } from '@wagmi/core/experimental';
-import { toSafeSmartAccount } from 'permissionless';
 
 import React, {
   createContext,
@@ -23,11 +22,11 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { Address } from 'viem';
 import { arbitrum } from 'viem/chains';
 import { useAccount } from 'wagmi';
 
 // hardcoding for now
-
 const FROM_TOKEN_ADDRESS = assets[arbitrum.id].find(
   (asset) => asset.symbol === 'USDC'
 )!.address;
@@ -39,21 +38,22 @@ type SwapContextProps = {
 };
 
 type Context = {
-  executeSwap: () => Promise<void>;
+  executeSwap: () => Promise<string>;
   isSwapping: boolean;
   routes: Route[];
   isRoutesLoading: boolean;
   fetchRoutes: ReturnType<typeof useFetchRoutes>['fetchRoutes'];
   routesError: ReturnType<typeof useFetchRoutes>['routesError'];
   currentStatus: BridgeStatus;
-  fromTokenAddress: string;
-  toTokenAddress: string;
+  fromTokenAddress: Address;
+  toTokenAddress: Address;
   selectedRoute: Route | null;
   setSelectedRoute: (route: Route) => void;
   fromChainId: number;
   toChainId: number;
   reset: () => void;
 };
+
 export type BridgeStatus =
   | 'READY'
   | 'BUILDING_TX'
@@ -70,22 +70,24 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
   const [isSwapping, setIsSwapping] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [currentStatus, setCurrentStatus] = useState<BridgeStatus>('READY');
-  const [fromTokenAddress] = useState<string>(FROM_TOKEN_ADDRESS);
-  const [toTokenAddress] = useState<string>(TO_TOKEN_ADDRESS);
+  const [fromTokenAddress] = useState(FROM_TOKEN_ADDRESS);
+  const [toTokenAddress] = useState(TO_TOKEN_ADDRESS);
   // hardcoded chain ids
   const [fromChainId] = useState<number>(arbitrum.id);
   const [toChainId] = useState<number>(arbitrum.id);
   const hasBatchingCapability = useHasBatchingCapability();
 
-  const { address, connector } = useAccount();
-  const { routes, isRoutesLoading, fetchRoutes, routesError } =
+  const account = useAccount();
+  const { address, connector } = account;
+  const { routes, isRoutesLoading, fetchRoutes, routesError, resetRoutes } =
     useFetchRoutes();
 
   const reset = useCallback(() => {
     setCurrentStatus('READY');
     setIsSwapping(false);
     setSelectedRoute(null);
-  }, []);
+    resetRoutes();
+  }, [resetRoutes]);
 
   useEffect(() => {
     if (routes.length > 0) {
@@ -95,11 +97,8 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
     }
   }, [routes]);
 
-  console.log({ connector });
-
   const executeSwap = useCallback(async () => {
-    console.log('Executing swap', selectedRoute);
-    if (!address) {
+    if (!address || !connector) {
       throw new Error('No account found');
     }
     if (!selectedRoute) {
@@ -113,17 +112,12 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
     setIsSwapping(true);
     setCurrentStatus('BUILDING_TX');
     try {
-      // Fetching transaction data for swap/bridge tx
       const buildTxResponse = await buildTx(selectedRoute);
-      // Used to check for ERC-20 approvals
       const approvalData = buildTxResponse.result.approvalData;
-      // approvalData from apiReturnData is null for native tokens
-      // Values are returned for ERC20 tokens but token allowance needs to be checked
       const gasPrice = await getGasPrice(wagmiConfig);
       let approveTxData = {};
       if (approvalData !== null) {
         const { allowanceTarget, minimumApprovalAmount } = approvalData;
-        // Fetches token allowance given to Bungee contracts
         const allowanceCheckStatus = await checkAllowance({
           chainId: fromChainId,
           owner: address,
@@ -133,9 +127,7 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
 
         const allowanceValue = allowanceCheckStatus.result?.value;
 
-        // If Bungee contracts don't have sufficient allowance
         if (minimumApprovalAmount > allowanceValue) {
-          // Approval tx data fetched
           const approvalTransactionData = await getApprovalTransactionData({
             chainId: fromChainId,
             owner: address,
@@ -146,7 +138,7 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
 
           approveTxData = {
             to: approvalTransactionData.result?.to,
-            value: BigInt(0),
+            value: BigInt(0).toString(),
             data: approvalTransactionData.result?.data,
             gasPrice,
           };
@@ -155,29 +147,27 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
 
       const bridgeTxData = {
         to: buildTxResponse.result.txTarget,
-        value: buildTxResponse.result.value,
+        value: buildTxResponse.result.value.toString(),
         data: buildTxResponse.result.txData,
         gasPrice,
       };
 
       if (hasBatchingCapability) {
-        const txHash = await sendCalls(wagmiConfig, {
-          calls: [approveTxData, bridgeTxData],
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          chainId: fromChainId,
+        const provider = await connector.getProvider();
+        const sdk = provider.sdk;
+
+        const response = await sdk.txs.send({
+          txs: [approveTxData, bridgeTxData],
         });
-        console.log({ txHash });
-        // await waitForTransactionReceipt(wagmiConfig, {
-        //   hash: txHash,
-        // });
+        const res = await waitForSafeTx(sdk, response.safeTxHash);
+
         setCurrentStatus('BRIDGE_COMPLETE');
+        return res.txHash as string;
       } else {
         setCurrentStatus('APPROVE_START');
 
         const txHashApprove = await sendTransaction(wagmiConfig, approveTxData);
         setCurrentStatus('APPROVE_PENDING');
-        // Initiates approval transaction on user's frontend which user has to sign
         await waitForTransactionReceipt(wagmiConfig, {
           hash: txHashApprove,
         });
@@ -186,11 +176,11 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
 
         const txHashBridge = await sendTransaction(wagmiConfig, bridgeTxData);
         setCurrentStatus('BRIDGE_PENDING');
-        // Initiates swap/bridge transaction on user's frontend which user has to sign
         await waitForTransactionReceipt(wagmiConfig, {
           hash: txHashBridge,
         });
         setCurrentStatus('BRIDGE_COMPLETE');
+        return txHashBridge;
       }
 
       // await bridgeStatusResolver({
@@ -198,7 +188,6 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       //   fromChainId,
       //   toChainId,
       // });
-      setCurrentStatus('BRIDGE_COMPLETE');
     } catch (e) {
       console.error(e);
       throw e;
@@ -207,11 +196,12 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       setIsSwapping(false);
     }
   }, [
-    address,
-    fromChainId,
-    fromTokenAddress,
     selectedRoute,
+    address,
     hasBatchingCapability,
+    fromTokenAddress,
+    fromChainId,
+    connector,
   ]);
 
   return (
