@@ -48,25 +48,20 @@ export interface Route {
   totalGasFeesInUsd: number;
   recipient: string;
   sender: string;
-  userTxs: UserTx[];
+  userTxs: Record<string, unknown>[];
   receivedValueInUsd?: number;
   inputValueInUsd?: number;
   outputValueInUsd?: number;
   serviceTime: number;
   maxServiceTime: number;
-  integratorFee: Record<string, any>;
+  integratorFee: Record<string, unknown>;
   t2bReceiverAddress?: string;
-  extraData?: Record<string, any>;
+  extraData?: Record<string, unknown>;
   fromChainId: number;
   fromAsset: Token;
   toChainId: number;
   toAsset: Token;
   refuel?: Refuel;
-}
-
-export interface UserTx {
-  // You can expand this as needed
-  [key: string]: any;
 }
 
 export interface Token {
@@ -83,7 +78,7 @@ export interface Token {
 export interface Refuel {
   fromAmount: string;
   toAmount: string;
-  gasFees: Record<string, any>;
+  gasFees: Record<string, unknown>;
   recipient: string;
   serviceTime: number;
   fromAsset: Token;
@@ -104,7 +99,7 @@ export interface BuildTxRequest {
     totalGasFeesInUsd: number;
     recipient: string;
     sender: string;
-    userTxs: Record<string, any>[];
+    userTxs: Record<string, unknown>[];
     receivedValueInUsd: number;
     inputValueInUsd: number;
     outputValueInUsd: number;
@@ -116,7 +111,7 @@ export interface BuildTxRequest {
       asset: Token;
     };
     t2bReceiverAddress: string;
-    extraData: Record<string, any>;
+    extraData: Record<string, unknown>;
   };
   refuel: {
     fromAmount: string;

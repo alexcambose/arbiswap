@@ -8,16 +8,15 @@ import {
   BuildApprovalTxResponse,
   GetBridgeStatusResponse,
   GetBridgeStatusRequest,
+  GetQuoteResponse,
 } from '@/types/ApiTypes';
 import fetch from 'node-fetch';
 
 class BungeeAPI {
   private readonly baseUrl = 'https://api.socket.tech/v2/quote';
-  private readonly apiKey: string;
   private readonly headers: Record<string, string>;
 
   constructor(apiKey: string) {
-    this.apiKey = apiKey;
     this.headers = {
       'API-KEY': apiKey,
       'Content-Type': 'application/json',
@@ -39,7 +38,9 @@ class BungeeAPI {
     return query.toString();
   }
 
-  public async getQuote(params: GetQuoteRequestParams): Promise<any> {
+  public async getQuote(
+    params: GetQuoteRequestParams
+  ): Promise<GetQuoteResponse> {
     const queryString = this.buildQuery(params);
     const url = `${this.baseUrl}?${queryString}`;
     try {
@@ -50,7 +51,7 @@ class BungeeAPI {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      return await response.json();
+      return (await response.json()) as GetQuoteResponse;
     } catch (error) {
       console.error('Error fetching from-token-list:', error);
       throw error;
