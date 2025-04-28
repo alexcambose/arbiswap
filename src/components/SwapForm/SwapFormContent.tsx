@@ -11,7 +11,6 @@ import RoutesList from './RoutesList';
 import { SwapButton } from './SwapButton';
 import { ToField } from './ToField';
 import Link from 'next/link';
-import { reset } from 'viem/actions';
 import { useAccountEffect } from 'wagmi';
 
 export const SwapFormContent = ({
