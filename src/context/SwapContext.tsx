@@ -198,6 +198,7 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
         return txHashBridge;
       }
 
+      // this would be needed if bridging cross chain I believe
       // await bridgeStatusResolver({
       //   txHash,
       //   fromChainId,

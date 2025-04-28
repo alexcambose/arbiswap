@@ -1,4 +1,4 @@
-# [DEMO](https://www.loom.com/share/d8384255058045ac85ef3c9f6dd74d66)
+# [VIDEO DEMO](https://www.loom.com/share/d8384255058045ac85ef3c9f6dd74d66)
 
 # Bungee Single-Chain Swap with EIP-5792 Smart Wallet Support
 

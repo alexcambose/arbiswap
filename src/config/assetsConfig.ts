@@ -26,4 +26,5 @@ export const assets: {
       logoUrl: 'https://media.socket.tech/tokens/all/ETH',
     },
   ],
+  // TODO: add more assets and chains
 };

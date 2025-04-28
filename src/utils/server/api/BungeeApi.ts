@@ -37,7 +37,11 @@ class BungeeAPI {
     }
     return query.toString();
   }
-
+  /**
+   * Fetches a quote for a swap
+   * @param params - The parameters for the quote
+   * @returns The quote
+   */
   public async getQuote(
     params: GetQuoteRequestParams
   ): Promise<GetQuoteResponse> {
@@ -57,6 +61,11 @@ class BungeeAPI {
       throw error;
     }
   }
+  /**
+   * Builds a transaction for a swap
+   * @param data - The data for the transaction
+   * @returns The transaction
+   */
   public async buildTx(data: BuildTxRequest): Promise<BuildTxResponse> {
     const res = await fetch('https://api.socket.tech/v2/build-tx', {
       method: 'POST',
@@ -71,6 +80,12 @@ class BungeeAPI {
     const json = await res.json();
     return json as BuildTxResponse;
   }
+
+  /**
+   * Checks if the allowance is sufficient for a swap
+   * @param params - The parameters for the allowance check
+   * @returns The allowance check
+   */
   public async checkAllowance(
     params: CheckAllowanceRequest
   ): Promise<CheckAllowanceResponse> {
@@ -90,6 +105,12 @@ class BungeeAPI {
 
     return response.json() as Promise<CheckAllowanceResponse>;
   }
+
+  /**
+   * Builds an approval transaction for a swap
+   * @param params - The parameters for the approval transaction
+   * @returns The approval transaction
+   */
   public async buildApprovalTx(
     params: BuildApprovalTxRequest
   ): Promise<BuildApprovalTxResponse> {
@@ -111,6 +132,11 @@ class BungeeAPI {
     return response.json() as Promise<BuildApprovalTxResponse>;
   }
 
+  /**
+   * Fetches the bridging status for a transaction
+   * @param params - The parameters for the bridging status
+   * @returns The bridging status
+   */
   public async getBridgeStatus(
     params: GetBridgeStatusRequest
   ): Promise<GetBridgeStatusResponse> {
