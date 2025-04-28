@@ -14,7 +14,6 @@ import {
   sendTransaction,
   waitForTransactionReceipt,
 } from '@wagmi/core';
-
 import React, {
   createContext,
   useCallback,
@@ -25,6 +24,8 @@ import React, {
 import { Address } from 'viem';
 import { arbitrum } from 'viem/chains';
 import { useAccount } from 'wagmi';
+import type { BaseTransaction } from '@safe-global/safe-apps-sdk';
+import { useSafeAppsSDK } from '@safe-global/safe-apps-react-sdk';
 
 // hardcoding for now
 const FROM_TOKEN_ADDRESS = assets[arbitrum.id].find(
@@ -76,6 +77,7 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
   const [fromChainId] = useState<number>(arbitrum.id);
   const [toChainId] = useState<number>(arbitrum.id);
   const hasBatchingCapability = useHasBatchingCapability();
+  const { sdk } = useSafeAppsSDK();
 
   const account = useAccount();
   const { address, connector } = account;
@@ -105,7 +107,6 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       throw new Error('No route selected');
     }
 
-    console.log('Executing swap', selectedRoute, hasBatchingCapability);
     const tokenAddress = fromTokenAddress;
     const fromAmount = selectedRoute.fromAmount;
 
@@ -152,13 +153,13 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
         gasPrice,
       };
 
-      if (hasBatchingCapability) {
-        const provider = await connector.getProvider();
-        const sdk = provider.sdk;
-
+      if (hasBatchingCapability && connector.type === 'safe') {
         const response = await sdk.txs.send({
-          txs: [approveTxData, bridgeTxData],
+          txs: (approveTxData
+            ? [approveTxData, bridgeTxData]
+            : [bridgeTxData]) as BaseTransaction[],
         });
+
         const res = await waitForSafeTx(sdk, response.safeTxHash);
 
         setCurrentStatus('BRIDGE_COMPLETE');
@@ -166,12 +167,17 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       } else {
         setCurrentStatus('APPROVE_START');
 
-        const txHashApprove = await sendTransaction(wagmiConfig, approveTxData);
-        setCurrentStatus('APPROVE_PENDING');
-        await waitForTransactionReceipt(wagmiConfig, {
-          hash: txHashApprove,
-        });
-        setCurrentStatus('APPROVE_COMPLETE');
+        if (approveTxData) {
+          const txHashApprove = await sendTransaction(
+            wagmiConfig,
+            approveTxData
+          );
+          setCurrentStatus('APPROVE_PENDING');
+          await waitForTransactionReceipt(wagmiConfig, {
+            hash: txHashApprove,
+          });
+          setCurrentStatus('APPROVE_COMPLETE');
+        }
         setCurrentStatus('BRIDGE_START');
 
         const txHashBridge = await sendTransaction(wagmiConfig, bridgeTxData);
@@ -196,12 +202,13 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       setIsSwapping(false);
     }
   }, [
-    selectedRoute,
     address,
+    connector,
+    selectedRoute,
     hasBatchingCapability,
     fromTokenAddress,
     fromChainId,
-    connector,
+    sdk,
   ]);
 
   return (

@@ -75,21 +75,25 @@ export const SwapFormContent = ({
 
   return (
     <>
+      <FromField />
+      <ToField />
+      <SwapButton />
       {successTxHash && (
-        <div role="alert" className="alert alert-success">
+        <div
+          role="alert"
+          className="alert alert-success alert-soft flex justify-between"
+        >
           Swap successful.{' '}
           <Link
             href={`https://arbiscan.io/tx/${successTxHash}`}
             target="_blank"
+            className="link"
             rel="noopener noreferrer"
           >
             View on Arbiscan
           </Link>
         </div>
       )}
-      <FromField />
-      <ToField />
-      <SwapButton />
       <RoutesList />
       {routesError && (
         <div role="alert" className="alert alert-error">

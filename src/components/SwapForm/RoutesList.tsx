@@ -4,16 +4,11 @@ import { dexConfig } from '@/config/dexConfig';
 import Image from 'next/image';
 import { assets } from '@/config/assets';
 import { formatUnits } from 'viem';
+import classNames from 'classnames';
 
-const RouteCard = ({
-  route,
-  selected,
-  onSelect,
-}: {
-  route: Route;
-  selected: boolean;
-  onSelect: () => void;
-}) => {
+const RouteCard = ({ route }: { route: Route }) => {
+  const { setSelectedRoute, selectedRoute } = useSwapContext();
+
   const { fromChainId, toChainId, fromTokenAddress, toTokenAddress } =
     useSwapContext();
   const routeDexConfig = dexConfig.find(
@@ -32,24 +27,26 @@ const RouteCard = ({
 
   return (
     <div
-      className={`card bg-base-100 w-full shadow-sm cursor-pointer border transition-all duration-150 ${
-        selected
-          ? 'border-primary ring-2 ring-primary'
-          : 'border-base-200 hover:border-primary/60'
-      }`}
-      onClick={onSelect}
+      role="button"
+      onClick={() => setSelectedRoute(route)}
+      className={classNames(
+        'card bg-base-100 w-full shadow-sm cursor-pointer border transition-all duration-150 border-base-200 hover:border-primary/60',
+        {
+          'border-primary ring-2 ring-primary':
+            selectedRoute?.routeId === route.routeId,
+        }
+      )}
     >
-      <div className="card-body flex flex-row items-center gap-4 p-4">
-        {/* DEX/Bridge Logo and Name */}
-        <div className="flex flex-col items-center min-w-[60px]">
+      <div className="card-body flex flex-row items-center gap-4 p-2">
+        <div className="flex flex-1 flex-col items-center">
           <div className="avatar mb-1">
             {routeDexConfig && (
               <Image
                 src={routeDexConfig?.logoUri}
                 alt={routeDexConfig?.displayName}
-                className="w-10 h-10 rounded-full"
-                width={40}
-                height={40}
+                className="w-8 h-8 rounded-full"
+                width={30}
+                height={30}
               />
             )}
           </div>
@@ -57,10 +54,8 @@ const RouteCard = ({
             {routeDexConfig?.displayName || route.usedDexName}
           </span>
         </div>
-        {/* Swap Details */}
-        <div className="flex-1 flex flex-col gap-1">
+        <div className="flex-4 flex items-end flex-col gap-1">
           <div className="flex items-center gap-2">
-            {/* From token */}
             <div className="flex items-center gap-1">
               {fromAssetConfig && (
                 <Image
@@ -82,7 +77,6 @@ const RouteCard = ({
               </span>
             </div>
             <span className="mx-2 text-base-content/40">→</span>
-            {/* To token */}
             <div className="flex items-center gap-1">
               {toAssetConfig && (
                 <Image
@@ -124,7 +118,7 @@ const RouteCard = ({
 };
 
 const RoutesList = () => {
-  const { routes, selectedRoute, setSelectedRoute } = useSwapContext();
+  const { routes } = useSwapContext();
   if (routes.length === 0) {
     return null;
   }
@@ -135,12 +129,7 @@ const RoutesList = () => {
       )}
       <div className="flex flex-col gap-3 mt-2">
         {routes.map((route) => (
-          <RouteCard
-            key={route.routeId}
-            route={route}
-            selected={selectedRoute?.routeId === route.routeId}
-            onSelect={() => setSelectedRoute(route)}
-          />
+          <RouteCard key={route.routeId} route={route} />
         ))}
       </div>
     </div>
