@@ -3,6 +3,11 @@ import { useAccount, useReadContracts } from 'wagmi';
 
 const ERC20_DECIMALS = 6; // consider always using 6 decimals for erc20 tokens for simplicity
 
+/**
+ * Fetches the balance of an ERC20 token
+ * @param tokenAddress - The address of the token
+ * @returns The balance of the token
+ */
 export function useErc20TokenBalance(tokenAddress: Address) {
   const { address } = useAccount();
 

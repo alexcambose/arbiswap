@@ -9,7 +9,7 @@ import {
   GetBridgeStatusResponse,
   GetBridgeStatusRequest,
   GetQuoteResponse,
-} from '@/types/ApiTypes';
+} from '@/types/BungeeApi';
 import fetch from 'node-fetch';
 
 class BungeeAPI {

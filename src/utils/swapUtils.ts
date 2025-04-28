@@ -1,5 +1,9 @@
-import { Route } from '@/types/ApiTypes';
-
+import { Route } from '@/types/BungeeApi';
+/**
+ * Fetches a quote for a swap
+ * @param params - The parameters for the quote
+ * @returns The quote
+ */
 export async function getQuote(params: {
   fromChainId: number;
   fromTokenAddress: string;
@@ -25,6 +29,11 @@ export async function getQuote(params: {
   return json;
 }
 
+/**
+ * Builds a transaction for a swap
+ * @param route - The route to build the transaction for
+ * @returns The transaction data
+ */
 export const buildTx = async (route: Route) => {
   // Fetching transaction data for swap/bridge tx
   const buildTxRawResponse = await fetch(`/api/build-tx`, {
@@ -54,7 +63,11 @@ export async function getBridgeStatus(
   return json;
 }
 
-// Fetches transaction data for token approval
+/**
+ * Fetches transaction data for token approval
+ * @param params - The parameters for the approval transaction
+ * @returns The transaction data
+ */
 export async function getApprovalTransactionData(params: {
   chainId: number;
   owner: string;
@@ -77,6 +90,11 @@ export async function getApprovalTransactionData(params: {
   return json;
 }
 
+/**
+ * Fetches the allowance for a token
+ * @param params - The parameters for the allowance check
+ * @returns The allowance
+ */
 export async function checkAllowance(params: {
   chainId: number;
   owner: string;
@@ -97,6 +115,13 @@ export async function checkAllowance(params: {
   return json;
 }
 
+/**
+ * Resolves the status of a bridge transaction
+ * @param txHash - The hash of the transaction to check
+ * @param fromChainId - The ID of the chain the transaction was sent from
+ * @param toChainId - The ID of the chain the transaction was sent to
+ * @returns The status of the transaction
+ */
 export const bridgeStatusResolver = ({
   txHash,
   fromChainId,

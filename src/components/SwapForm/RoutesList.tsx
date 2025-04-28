@@ -1,10 +1,14 @@
 import { useSwapContext } from '@/context/SwapContext';
-import { Route } from '@/types/ApiTypes';
+import { Route } from '@/types/BungeeApi';
 import { dexConfig } from '@/config/dexConfig';
 import Image from 'next/image';
 import { assets } from '@/config/assets';
 import { formatUnits } from 'viem';
 import classNames from 'classnames';
+
+const formatAmount = (amount: string, decimals: number) => {
+  return parseFloat(formatUnits(BigInt(amount), decimals)).toFixed(4);
+};
 
 const RouteCard = ({ route }: { route: Route }) => {
   const { setSelectedRoute, selectedRoute } = useSwapContext();
@@ -50,11 +54,11 @@ const RouteCard = ({ route }: { route: Route }) => {
               />
             )}
           </div>
-          <span className="text-xs font-semibold capitalize text-base-content/70">
+          <span className="text-xs font-semibold capitalize text-base-content">
             {routeDexConfig?.displayName || route.usedDexName}
           </span>
         </div>
-        <div className="flex-4 flex items-end flex-col gap-1">
+        <div className="flex-4 flex items-stand flex-col gap-1">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
               {fromAssetConfig && (
@@ -67,10 +71,7 @@ const RouteCard = ({ route }: { route: Route }) => {
                 />
               )}
               <span className="font-medium">
-                {formatUnits(
-                  BigInt(route.fromAmount),
-                  fromAssetConfig.decimals
-                )}
+                {formatAmount(route.fromAmount, fromAssetConfig.decimals)}
               </span>
               <span className="text-xs text-base-content/60">
                 {fromAssetConfig?.symbol}
@@ -88,9 +89,7 @@ const RouteCard = ({ route }: { route: Route }) => {
                 />
               )}
               <span className="font-medium">
-                {parseFloat(
-                  formatUnits(BigInt(route.toAmount), toAssetConfig.decimals)
-                ).toFixed(4)}
+                {formatAmount(route.toAmount, toAssetConfig.decimals)}
               </span>
               <span className="text-xs text-base-content/60">
                 {toAssetConfig?.symbol}

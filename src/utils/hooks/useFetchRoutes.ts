@@ -3,6 +3,10 @@ import { useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { getQuote } from '../swapUtils';
 
+/**
+ * Fetches routes for a swap
+ * @returns The routes
+ */
 export const useFetchRoutes = () => {
   const [routes, setRoutes] = useState([]);
   const [isRoutesLoading, setIsRoutesLoading] = useState(false);

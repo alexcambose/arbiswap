@@ -47,14 +47,12 @@ const SwapCard = () => (
   <div className="flex justify-center items-center pt-10">
     <div className="flex flex-col gap-4 w-96">
       <AdditionalInfo />
-      <div className="card bg-base-200 shadow-sm">
-        <div className="card bg-base-200 shadow-sm">
-          <div className="card-body">
-            <h2 className="card-title">Swap Assets</h2>
-            <SwapContextProvider>
-              <SwapForm />
-            </SwapContextProvider>
-          </div>
+      <div className="card bg-blue-100 shadow-sm">
+        <div className="card-body">
+          <h2 className="card-title">Swap Assets</h2>
+          <SwapContextProvider>
+            <SwapForm />
+          </SwapContextProvider>
         </div>
       </div>
     </div>

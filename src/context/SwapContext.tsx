@@ -1,6 +1,6 @@
 import { assets } from '@/config/assets';
 import { wagmiConfig } from '@/config/walletConfig';
-import { Route } from '@/types/ApiTypes';
+import { Route } from '@/types/BungeeApi';
 import { useFetchRoutes } from '@/utils/hooks/useFetchRoutes';
 import { useHasBatchingCapability } from '@/utils/hooks/useHasBatchingCapability';
 import { waitForSafeTx } from '@/utils/safe';
@@ -154,11 +154,14 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
       };
 
       if (hasBatchingCapability && connector.type === 'safe') {
+        setCurrentStatus('BRIDGE_START');
+
         const response = await sdk.txs.send({
           txs: (approveTxData
             ? [approveTxData, bridgeTxData]
             : [bridgeTxData]) as BaseTransaction[],
         });
+        setCurrentStatus('BRIDGE_PENDING');
 
         const res = await waitForSafeTx(sdk, response.safeTxHash);
 

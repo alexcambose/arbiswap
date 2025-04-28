@@ -3,7 +3,10 @@ import { wagmiConfig } from '@/config/walletConfig';
 import { useAccount } from 'wagmi';
 import { useEffect } from 'react';
 import { useState } from 'react';
-
+/**
+ * Checks if the current account from the wallet has batching capability
+ * @returns Whether the account has batching capability
+ */
 export const useHasBatchingCapability = () => {
   const { chainId } = useAccount();
   const [hasBatchingCapability, setHasBatchingCapability] = useState(false);

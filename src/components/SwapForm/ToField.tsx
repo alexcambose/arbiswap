@@ -29,16 +29,20 @@ const ToFieldLabel = () => {
   );
 };
 
-export const ToField = () => (
-  <div className="fieldset">
-    <ToFieldLabel />
-    <Field
-      id="toAmount"
-      name="toAmount"
-      className="input w-full"
-      placeholder="Type here"
-      type="number"
-      min="1"
-    />
-  </div>
-);
+export const ToField = () => {
+  const { address } = useAccount();
+  return (
+    <div className="fieldset">
+      <ToFieldLabel />
+      <Field
+        id="toAmount"
+        name="toAmount"
+        className="input w-full"
+        placeholder="Type here"
+        type="number"
+        min="1"
+        disabled={!address}
+      />
+    </div>
+  );
+};

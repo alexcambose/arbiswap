@@ -1,9 +1,11 @@
 import { useSwapContext } from '@/context/SwapContext';
 import { assets } from '@/config/assets';
 import { useErc20TokenBalance } from '@/utils/hooks/useErc20TokenBalance';
-import { Field } from 'formik';
+import { Field, useFormikContext } from 'formik';
 import { useAccount } from 'wagmi';
-
+import { SwapFormSchema } from '@/utils/server/api/schemas';
+import { z } from 'zod';
+import classNames from 'classnames';
 const FromFieldLabel = () => {
   const { address } = useAccount();
   const { fromTokenAddress, fromChainId } = useSwapContext();
@@ -28,16 +30,28 @@ const FromFieldLabel = () => {
   );
 };
 
-export const FromField = () => (
-  <div className="fieldset">
-    <FromFieldLabel />
-    <Field
-      id="fromAmount"
-      name="fromAmount"
-      className="input w-full"
-      placeholder="Type here"
-      type="number"
-      min="1"
-    />
-  </div>
-);
+export const FromField = () => {
+  const { address } = useAccount();
+  const { errors, touched } =
+    useFormikContext<z.infer<typeof SwapFormSchema>>();
+
+  return (
+    <div className="fieldset">
+      <FromFieldLabel />
+      <Field
+        disabled={!address}
+        id="fromAmount"
+        name="fromAmount"
+        className={classNames('input w-full', {
+          'border-red-500': errors.fromAmount && touched.fromAmount,
+        })}
+        placeholder="Type here"
+        type="number"
+        min="0.000001"
+      />
+      {errors.fromAmount && touched.fromAmount && (
+        <div className="text-red-500 text-sm mt-1">{errors.fromAmount}</div>
+      )}
+    </div>
+  );
+};
