@@ -1,3 +1,5 @@
+# [DEMO](https://www.loom.com/share/d8384255058045ac85ef3c9f6dd74d66)
+
 # Bungee Single-Chain Swap with EIP-5792 Smart Wallet Support
 
 A web application that demonstrates token swapping (USDC to ETH) on Arbitrum using Bungee, with support for Safe wallets and EIP-5792 batching capabilities.
@@ -69,25 +71,15 @@ The application will be available at `http://localhost:3000`.
 3. Review the transaction details
 4. Approve the transaction
    - For EOA wallets: Approve and swap will be sequential
-   - For Safe wallets: Transactions will be batched using EIP-5792
+   - For Safe wallets: Transactions will be batched
 
-## Implementation Details
-
-### EIP-5792 Integration
-
-The application implements EIP-5792 for Safe wallets by:
-
-- Detecting Safe wallet connections (https://app.safe.global/)
-- Batching token approval and swap transactions
-- Handling tx status
-
-### Project Structure
+## Project Structure
 
 ```
 src/
-├── components/     # Reusable UI components
+├── components/    # Reusable UI components
 ├── hooks/         # Custom React hooks
-├── pages/         # Next.js pages
+├── app/           # Next.js app pages/api routes
 ├── styles/        # Global styles
 ├── types/         # TypeScript type definitions
 └── utils/         # Utility functions
