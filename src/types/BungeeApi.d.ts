@@ -1,5 +1,4 @@
-// Note that this could've been generated from the openapi spec,
-// but I'm not sure how to do that with the bungee api
+// Note that this could've been auto generated from the openapi spec
 
 export interface GetQuoteRequestParams {
   fromChainId: string;

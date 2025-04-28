@@ -23,7 +23,7 @@ import React, {
 } from 'react';
 import { Address } from 'viem';
 import { arbitrum } from 'viem/chains';
-import { useAccount } from 'wagmi';
+import { useAccount, useAccountEffect } from 'wagmi';
 import type { BaseTransaction } from '@safe-global/safe-apps-sdk';
 import { useSafeAppsSDK } from '@safe-global/safe-apps-react-sdk';
 
@@ -91,6 +91,12 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
     resetRoutes();
   }, [resetRoutes]);
 
+  useAccountEffect({
+    onDisconnect() {
+      reset();
+    },
+  });
+
   useEffect(() => {
     if (routes.length > 0) {
       setSelectedRoute(routes[0]);
@@ -101,7 +107,7 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
 
   const executeSwap = useCallback(async () => {
     if (!address || !connector) {
-      throw new Error('No account found');
+      throw new Error('No account found. Please connect your wallet.');
     }
     if (!selectedRoute) {
       throw new Error('No route selected');

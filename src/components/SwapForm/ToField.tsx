@@ -1,8 +1,11 @@
 import { useSwapContext } from '@/context/SwapContext';
 import { assets } from '@/config/assets';
 import { useNativeTokenBalance } from '@/utils/hooks/useNativeTokenBalance';
-import { Field } from 'formik';
+import { Field, useFormikContext } from 'formik';
 import { useAccount } from 'wagmi';
+import { SwapFormSchema } from '@/utils/server/api/schemas';
+import { z } from 'zod';
+import { formatDecimal } from '@/utils/format';
 
 const ToFieldLabel = () => {
   const { address } = useAccount();
@@ -18,7 +21,7 @@ const ToFieldLabel = () => {
     <div className="skeleton h-4 w-32"></div>
   ) : (
     <div>
-      {balance} {assetInfo?.symbol}
+      {formatDecimal(balance ?? 0, 6)} {assetInfo?.symbol}
     </div>
   );
 
@@ -30,7 +33,7 @@ const ToFieldLabel = () => {
 };
 
 export const ToField = () => {
-  const { address } = useAccount();
+  const { values } = useFormikContext<z.infer<typeof SwapFormSchema>>();
   return (
     <div className="fieldset">
       <ToFieldLabel />
@@ -39,9 +42,10 @@ export const ToField = () => {
         name="toAmount"
         className="input w-full"
         placeholder="Type here"
-        type="number"
+        type="text"
         min="1"
-        disabled={!address}
+        value={formatDecimal(values.toAmount, 6)}
+        disabled={true}
       />
     </div>
   );

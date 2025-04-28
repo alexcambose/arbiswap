@@ -11,13 +11,15 @@ import RoutesList from './RoutesList';
 import { SwapButton } from './SwapButton';
 import { ToField } from './ToField';
 import Link from 'next/link';
+import { reset } from 'viem/actions';
+import { useAccountEffect } from 'wagmi';
 
 export const SwapFormContent = ({
   successTxHash,
 }: {
   successTxHash: string;
 }) => {
-  const { values, isValid, setFieldValue } =
+  const { values, isValid, setFieldValue, resetForm } =
     useFormikContext<z.infer<typeof SwapFormSchema>>();
 
   const {
@@ -29,6 +31,12 @@ export const SwapFormContent = ({
     selectedRoute,
     toChainId,
   } = useSwapContext();
+
+  useAccountEffect({
+    onDisconnect() {
+      resetForm();
+    },
+  });
 
   const debouncedFetchRoutes = useCallback(debounce(fetchRoutes, 1000), [
     fetchRoutes,

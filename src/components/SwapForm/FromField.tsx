@@ -6,6 +6,8 @@ import { useAccount } from 'wagmi';
 import { SwapFormSchema } from '@/utils/server/api/schemas';
 import { z } from 'zod';
 import classNames from 'classnames';
+import { formatDecimal } from '@/utils/format';
+
 const FromFieldLabel = () => {
   const { address } = useAccount();
   const { fromTokenAddress, fromChainId } = useSwapContext();
@@ -19,7 +21,7 @@ const FromFieldLabel = () => {
     <div className="skeleton h-4 w-32"></div>
   ) : (
     <div>
-      {balance} {assetInfo?.symbol}
+      {formatDecimal(balance ?? 0, 6)} {assetInfo?.symbol}
     </div>
   );
 

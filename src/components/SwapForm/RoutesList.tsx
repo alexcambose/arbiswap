@@ -7,7 +7,9 @@ import { formatUnits } from 'viem';
 import classNames from 'classnames';
 
 const formatAmount = (amount: string, decimals: number) => {
-  return parseFloat(formatUnits(BigInt(amount), decimals)).toFixed(4);
+  return parseFloat(formatUnits(BigInt(amount), decimals))
+    .toFixed(3)
+    .replace(/\.?0+$/, '');
 };
 
 const RouteCard = ({ route }: { route: Route }) => {
