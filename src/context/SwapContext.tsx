@@ -1,4 +1,4 @@
-import { assets } from '@/config/assets';
+import { assets } from '@/config/assetsConfig';
 import { wagmiConfig } from '@/config/walletConfig';
 import { Route } from '@/types/BungeeApi';
 import { useFetchRoutes } from '@/utils/hooks/useFetchRoutes';

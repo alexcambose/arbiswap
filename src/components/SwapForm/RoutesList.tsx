@@ -2,7 +2,7 @@ import { useSwapContext } from '@/context/SwapContext';
 import { Route } from '@/types/BungeeApi';
 import { dexConfig } from '@/config/dexConfig';
 import Image from 'next/image';
-import { assets } from '@/config/assets';
+import { assets } from '@/config/assetsConfig';
 import { formatUnits } from 'viem';
 import classNames from 'classnames';
 

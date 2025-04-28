@@ -6,6 +6,11 @@ import {
 } from '@rainbow-me/rainbowkit/wallets';
 import { createConfig, http } from 'wagmi';
 import { arbitrum } from 'wagmi/chains';
+
+if (!process.env.NEXT_PUBLIC_PROJECT_ID) {
+  throw new Error('NEXT_PUBLIC_PROJECT_ID is not set');
+}
+
 const connectors = connectorsForWallets(
   [
     {
@@ -15,9 +20,10 @@ const connectors = connectorsForWallets(
   ],
   {
     appName: 'Arbiswap',
-    projectId: 'YOUR_PROJECT_ID',
+    projectId: process.env.NEXT_PUBLIC_PROJECT_ID,
   }
 );
+
 export const wagmiConfig = createConfig({
   connectors,
   chains: [arbitrum],

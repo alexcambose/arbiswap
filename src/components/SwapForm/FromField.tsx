@@ -1,5 +1,5 @@
 import { useSwapContext } from '@/context/SwapContext';
-import { assets } from '@/config/assets';
+import { assets } from '@/config/assetsConfig';
 import { useErc20TokenBalance } from '@/utils/hooks/useErc20TokenBalance';
 import { Field, useFormikContext } from 'formik';
 import { useAccount } from 'wagmi';

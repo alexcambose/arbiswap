@@ -4,7 +4,7 @@ A web application that demonstrates token swapping (USDC to ETH) on Arbitrum usi
 
 ## Overview
 
-This project implements a minimal web application that enables users to:
+This project implements the following:
 
 - Swap USDC to ETH on Arbitrum using Bungee
 - Support both standard EOA wallets and Safe smart wallets
@@ -23,39 +23,22 @@ This project implements a minimal web application that enables users to:
   - Single-chain USDC to ETH swaps on Arbitrum
   - Integration with Bungee APIs
   - Transaction status monitoring
-  - Safe signature collection progress tracking
-
-- **Technical Features**
-  - Type-safe development with TypeScript
-  - Modern React with Next.js
-  - Efficient transaction batching for Safe wallets
-  - Clean and maintainable codebase
 
 ## Tech Stack
 
 - **Frontend Framework**: Next.js 15 with React 19
 - **Wallet Integration**: RainbowKit, Wagmi, Viem
-- **Safe Integration**: Safe Apps SDK, EIP-5792
-- **State Management**: React Query
 - **Form Handling**: Formik with Zod validation
 - **Styling**: Tailwind CSS with DaisyUI
-- **Type Safety**: TypeScript
 
 ## Getting Started
-
-### Prerequisites
-
-- Node.js
-- npm
-- A Safe wallet (for testing Safe integration) - https://app.safe.global/
-- An Arbitrum wallet with USDC for testing
 
 ### Installation
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/arbiswap.git
+git clone https://github.com/alexcambose/arbiswap.git
 cd arbiswap
 ```
 
@@ -63,8 +46,6 @@ cd arbiswap
 
 ```bash
 npm install
-# or
-yarn install
 ```
 
 3. Create a `.env` file based on `.env.example`:
@@ -77,8 +58,6 @@ cp .env.example .env
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
 The application will be available at `http://localhost:3000`.
@@ -100,15 +79,7 @@ The application implements EIP-5792 for Safe wallets by:
 
 - Detecting Safe wallet connections (https://app.safe.global/)
 - Batching token approval and swap transactions
-- Handling transaction status and signature collection
-
-### Safe Integration
-
-Safe wallet support includes:
-
-- Transaction status monitoring
-- Signature collection progress tracking
-- Error handling for failed transactions
+- Handling tx status
 
 ### Project Structure
 

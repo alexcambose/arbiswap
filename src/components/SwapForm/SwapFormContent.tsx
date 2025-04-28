@@ -1,4 +1,4 @@
-import { assets } from '@/config/assets';
+import { assets } from '@/config/assetsConfig';
 import { useSwapContext } from '@/context/SwapContext';
 import { SwapFormSchema } from '@/utils/server/api/schemas';
 import { useFormikContext } from 'formik';

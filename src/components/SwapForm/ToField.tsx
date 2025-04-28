@@ -1,5 +1,5 @@
 import { useSwapContext } from '@/context/SwapContext';
-import { assets } from '@/config/assets';
+import { assets } from '@/config/assetsConfig';
 import { useNativeTokenBalance } from '@/utils/hooks/useNativeTokenBalance';
 import { Field, useFormikContext } from 'formik';
 import { useAccount } from 'wagmi';
