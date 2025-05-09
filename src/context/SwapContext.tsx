@@ -10,6 +10,7 @@ import {
   getApprovalTransactionData,
 } from '@/utils/swapUtils';
 import {
+  estimateGas,
   getGasPrice,
   sendTransaction,
   waitForTransactionReceipt,
@@ -115,14 +116,13 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
 
     const tokenAddress = fromTokenAddress;
     const fromAmount = selectedRoute.fromAmount;
-
     setIsSwapping(true);
     setCurrentStatus('BUILDING_TX');
     try {
       const buildTxResponse = await buildTx(selectedRoute);
       const approvalData = buildTxResponse.result.approvalData;
       const gasPrice = await getGasPrice(wagmiConfig);
-      let approveTxData = {};
+      let approveTxData: object | undefined = undefined;
       if (approvalData !== null) {
         const { allowanceTarget, minimumApprovalAmount } = approvalData;
         const allowanceCheckStatus = await checkAllowance({
@@ -142,12 +142,19 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
             tokenAddress,
             amount: fromAmount,
           });
+          const gasEstimate = await estimateGas(wagmiConfig, {
+            to: approvalTransactionData.result?.to,
+            value: BigInt(0),
+            data: approvalTransactionData.result?.data,
+            gasPrice: gasPrice,
+          });
 
           approveTxData = {
             to: approvalTransactionData.result?.to,
             value: BigInt(0).toString(),
             data: approvalTransactionData.result?.data,
             gasPrice,
+            gasEstimate,
           };
         }
       }
@@ -175,7 +182,6 @@ export const SwapContextProvider = ({ children }: SwapContextProps) => {
         return res.txHash as string;
       } else {
         setCurrentStatus('APPROVE_START');
-
         if (approveTxData) {
           const txHashApprove = await sendTransaction(
             wagmiConfig,
